@@ -90,8 +90,15 @@
             background: var(--button-active);
         }
 
+        .text-container {
+            position: relative;
+            width: 100%;
+            height: 150px;
+        }
+
         .text-input {
             width: 100%;
+            height: 100%;
             padding: 15px;
             border-radius: 10px;
             border: 1px solid var(--input-border);
@@ -100,10 +107,14 @@
             color: var(--text-color);
             resize: none;
             transition: all 0.3s;
+            box-sizing: border-box;
         }
 
         .text-center {
             text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .text-left {
@@ -165,14 +176,16 @@
             </button>
         </div>
         
-        <textarea class="text-input text-left" id="textToSpeak" placeholder="Type what you want the button to say..."></textarea>
+        <div class="text-container">
+            <textarea class="text-input text-left" id="textToSpeak" placeholder="Type what you want the button to say..."></textarea>
+        </div>
         
         <div class="controls">
             <div class="control-group">
                 <label for="textAlign">Text Alignment</label>
                 <select id="textAlign">
                     <option value="left">Left</option>
-                    <option value="center">Center</option>
+                    <option value="center">Centered</option>
                 </select>
             </div>
             
@@ -180,7 +193,7 @@
                 <label for="language">Language</label>
                 <select id="language">
                     <option value="en-US">English</option>
-                    <option value="ro-RO">Romanian</option>
+                    <option value="ro">Romanian</option>
                 </select>
             </div>
             
@@ -259,19 +272,12 @@
             const selectedLanguage = languageSelect.value;
             
             // Filter voices for the selected language
-            const languageVoices = voices.filter(voice => 
-                voice.lang === selectedLanguage
-            );
+            const languageVoices = voices.filter(voice => {
+                return voice.lang.startsWith(selectedLanguage);
+            });
             
             if (languageVoices.length > 0) {
-                // Prefer voices that sound more robotic
-                const preferredVoice = languageVoices.find(voice => 
-                    voice.name.toLowerCase().includes('robot') ||
-                    voice.name.toLowerCase().includes('zira') ||
-                    voice.name.toLowerCase().includes('stephen')
-                ) || languageVoices[0];
-                
-                utterance.voice = preferredVoice;
+                utterance.voice = languageVoices[0];
             }
             
             // Speak the text
