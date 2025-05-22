@@ -5,15 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voice Button</title>
     <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --text-color: #333;
+            --input-bg: #fff;
+            --input-border: #ccc;
+            --button-base: #333;
+            --button-dome: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
+            --button-active: radial-gradient(circle at 30% 30%, #cc0000, #990000);
+        }
+
+        .dark-mode {
+            --bg-color: #121212;
+            --text-color: #f0f0f0;
+            --input-bg: #333;
+            --input-border: #555;
+            --button-base: #222;
+        }
+
         body {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f0f0f0;
+            background-color: var(--bg-color);
             margin: 0;
             font-family: Arial, sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
 
         .container {
@@ -21,6 +41,15 @@
             flex-direction: column;
             align-items: center;
             gap: 20px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
         }
 
         .button-container {
@@ -33,7 +62,7 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background-color: #333;
+            background-color: var(--button-base);
             border-radius: 50%;
             box-shadow: inset 0 -5px 15px rgba(0,0,0,0.5);
         }
@@ -44,7 +73,7 @@
             height: 90%;
             left: 5%;
             top: 5%;
-            background: radial-gradient(circle at 30% 30%, #ff4444, #cc0000);
+            background: var(--button-dome);
             border-radius: 50%;
             box-shadow: 
                 0 5px 10px rgba(0,0,0,0.3),
@@ -58,38 +87,112 @@
             box-shadow: 
                 0 1px 1px rgba(0,0,0,0.3),
                 inset 0 1px 0 rgba(255,255,255,0.2);
-            background: radial-gradient(circle at 30% 30%, #cc0000, #990000);
+            background: var(--button-active);
         }
 
         .text-input {
-            width: 300px;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--input-border);
             font-size: 16px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            resize: none;
+            transition: all 0.3s;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-left {
+            text-align: left;
         }
 
         .controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
         }
 
         label {
             font-weight: bold;
+            font-size: 14px;
+        }
+
+        select, button.toggle {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid var(--input-border);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            cursor: pointer;
+        }
+
+        .toggle-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--text-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .slider {
+            width: 100px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Voice Button</h1>
-        <textarea class="text-input" id="textToSpeak" placeholder="Type what you want the button to say..."></textarea>
+        <div class="header">
+            <h1>Voice Button</h1>
+            <button class="toggle-btn" id="darkModeToggle">
+                <span>🌙</span> Dark Mode
+            </button>
+        </div>
+        
+        <textarea class="text-input text-left" id="textToSpeak" placeholder="Type what you want the button to say..."></textarea>
         
         <div class="controls">
-            <label for="rate">Speed:</label>
-            <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
-            <label for="pitch">Pitch:</label>
-            <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+            <div class="control-group">
+                <label for="textAlign">Text Alignment</label>
+                <select id="textAlign">
+                    <option value="left">Left</option>
+                    <option value="center">Center</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="language">Language</label>
+                <select id="language">
+                    <option value="en-US">English</option>
+                    <option value="ro-RO">Romanian</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="rate">Speed: <span id="rateValue">1</span></label>
+                <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1" class="slider">
+            </div>
+            
+            <div class="control-group">
+                <label for="pitch">Pitch: <span id="pitchValue">1</span></label>
+                <input type="range" id="pitch" min="0" max="2" step="0.1" value="1" class="slider">
+            </div>
         </div>
 
         <div class="button-container">
@@ -99,63 +202,121 @@
     </div>
 
     <script>
+        // DOM Elements
         const button = document.getElementById('speakButton');
-        
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const textAlignSelect = document.getElementById('textAlign');
+        const textInput = document.getElementById('textToSpeak');
+        const languageSelect = document.getElementById('language');
+        const rateSlider = document.getElementById('rate');
+        const pitchSlider = document.getElementById('pitch');
+        const rateValue = document.getElementById('rateValue');
+        const pitchValue = document.getElementById('pitchValue');
+
         // Button press effects
         button.addEventListener('mousedown', function() {
             this.style.transform = 'translateY(4px)';
-            this.style.background = 'radial-gradient(circle at 30% 30%, #cc0000, #990000)';
+            this.style.background = 'var(--button-active)';
         });
 
         button.addEventListener('mouseup', function() {
             this.style.transform = 'translateY(0)';
-            this.style.background = 'radial-gradient(circle at 30% 30%, #ff4444, #cc0000)';
+            this.style.background = 'var(--button-dome)';
         });
 
         button.addEventListener('mouseleave', function() {
             this.style.transform = 'translateY(0)';
-            this.style.background = 'radial-gradient(circle at 30% 30%, #ff4444, #cc0000)';
+            this.style.background = 'var(--button-dome)';
         });
 
         // Text-to-speech functionality
-        button.addEventListener('click', function() {
-            const text = document.getElementById('textToSpeak').value;
+        button.addEventListener('click', speakCurrentText);
+
+        function speakCurrentText() {
+            const text = textInput.value;
             if (!text) {
                 alert("Please type something first!");
                 return;
             }
             
             speakText(text);
-        });
+        }
 
         function speakText(text) {
+            // Cancel any current speech
+            window.speechSynthesis.cancel();
+            
             // Create speech synthesis utterance
             const utterance = new SpeechSynthesisUtterance(text);
             
             // Set voice properties
-            utterance.rate = document.getElementById('rate').value;
-            utterance.pitch = document.getElementById('pitch').value;
+            utterance.rate = parseFloat(rateSlider.value);
+            utterance.pitch = parseFloat(pitchSlider.value);
+            utterance.lang = languageSelect.value;
             
-            // Try to find a robotic voice
+            // Try to find an appropriate voice
             const voices = window.speechSynthesis.getVoices();
-            const robotVoice = voices.find(voice => 
-                voice.name.includes('Robot') || 
-                voice.name.includes('Zira') || 
-                voice.name.includes('David')
+            const selectedLanguage = languageSelect.value;
+            
+            // Filter voices for the selected language
+            const languageVoices = voices.filter(voice => 
+                voice.lang === selectedLanguage
             );
             
-            if (robotVoice) {
-                utterance.voice = robotVoice;
+            if (languageVoices.length > 0) {
+                // Prefer voices that sound more robotic
+                const preferredVoice = languageVoices.find(voice => 
+                    voice.name.toLowerCase().includes('robot') ||
+                    voice.name.toLowerCase().includes('zira') ||
+                    voice.name.toLowerCase().includes('stephen')
+                ) || languageVoices[0];
+                
+                utterance.voice = preferredVoice;
             }
             
             // Speak the text
             window.speechSynthesis.speak(utterance);
         }
 
+        // Dark mode toggle
+        darkModeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            this.innerHTML = isDark ? '<span>☀️</span> Light Mode' : '<span>🌙</span> Dark Mode';
+        });
+
+        // Text alignment
+        textAlignSelect.addEventListener('change', function() {
+            textInput.classList.remove('text-left', 'text-center');
+            textInput.classList.add(`text-${this.value}`);
+        });
+
+        // Language selection
+        languageSelect.addEventListener('change', function() {
+            // Voices may need to reload when language changes
+            window.speechSynthesis.onvoiceschanged();
+        });
+
+        // Update slider value displays
+        rateSlider.addEventListener('input', function() {
+            rateValue.textContent = this.value;
+        });
+
+        pitchSlider.addEventListener('input', function() {
+            pitchValue.textContent = this.value;
+        });
+
         // Load voices when they become available
-        window.speechSynthesis.onvoiceschanged = function() {
-            // Voices are now loaded
-        };
+        function loadVoices() {
+            // Some browsers need this timeout
+            setTimeout(() => {
+                const voices = window.speechSynthesis.getVoices();
+                console.log('Voices loaded:', voices);
+            }, 100);
+        }
+
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+        loadVoices(); // Initial load
     </script>
 </body>
 </html>
