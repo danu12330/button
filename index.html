@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>penis</title>
+    <title>Voice Button</title>
     <style>
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
             background-color: #f0f0f0;
             margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
 
         .button-container {
@@ -51,20 +60,50 @@
                 inset 0 1px 0 rgba(255,255,255,0.2);
             background: radial-gradient(circle at 30% 30%, #cc0000, #990000);
         }
+
+        .text-input {
+            width: 300px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        label {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <div class="button-container">
-        <div class="button-base"></div>
-        <audio id="audio" src="audio.wav" autostart=""></audio>
-        <div class="button-dome" onclick="document.getElementById('audio').play();">
+    <div class="container">
+        <h1>Voice Button</h1>
+        <textarea class="text-input" id="textToSpeak" placeholder="Type what you want the button to say..."></textarea>
+        
+        <div class="controls">
+            <label for="rate">Speed:</label>
+            <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+            <label for="pitch">Pitch:</label>
+            <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+        </div>
+
+        <div class="button-container">
+            <div class="button-base"></div>
+            <div class="button-dome" id="speakButton"></div>
         </div>
     </div>
+
     <script>
-   
-        const button = document.querySelector('.button-dome');
+        const button = document.getElementById('speakButton');
+        
+        // Button press effects
         button.addEventListener('mousedown', function() {
-            this.style.transform = 'translateY(0.6px)';
+            this.style.transform = 'translateY(4px)';
             this.style.background = 'radial-gradient(circle at 30% 30%, #cc0000, #990000)';
         });
 
@@ -77,6 +116,46 @@
             this.style.transform = 'translateY(0)';
             this.style.background = 'radial-gradient(circle at 30% 30%, #ff4444, #cc0000)';
         });
+
+        // Text-to-speech functionality
+        button.addEventListener('click', function() {
+            const text = document.getElementById('textToSpeak').value;
+            if (!text) {
+                alert("Please type something first!");
+                return;
+            }
+            
+            speakText(text);
+        });
+
+        function speakText(text) {
+            // Create speech synthesis utterance
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Set voice properties
+            utterance.rate = document.getElementById('rate').value;
+            utterance.pitch = document.getElementById('pitch').value;
+            
+            // Try to find a robotic voice
+            const voices = window.speechSynthesis.getVoices();
+            const robotVoice = voices.find(voice => 
+                voice.name.includes('Robot') || 
+                voice.name.includes('Zira') || 
+                voice.name.includes('David')
+            );
+            
+            if (robotVoice) {
+                utterance.voice = robotVoice;
+            }
+            
+            // Speak the text
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // Load voices when they become available
+        window.speechSynthesis.onvoiceschanged = function() {
+            // Voices are now loaded
+        };
     </script>
 </body>
 </html>
